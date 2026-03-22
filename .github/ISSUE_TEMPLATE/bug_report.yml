@@ -1,0 +1,121 @@
+name: Bug Report
+description: Report a defect or unexpected behaviour
+title: "[Bug]: "
+labels:
+  - bug
+  - intake
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for reporting a bug. Complete all sections so the team can
+        reproduce, prioritise, and fix the issue efficiently.
+
+  # ── Describe the Bug ────────────────────────────────────────────────────────
+  - type: textarea
+    id: description
+    attributes:
+      label: Bug Description
+      description: A clear and concise description of what the bug is.
+      placeholder: "When I do X, Y happens instead of Z."
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps-to-reproduce
+    attributes:
+      label: Steps to Reproduce
+      description: >
+        Provide the minimal, exact steps needed to reproduce the issue.
+      placeholder: |
+        1. Go to '...'
+        2. Click on '...'
+        3. Enter '...'
+        4. Observe the error
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected-behaviour
+    attributes:
+      label: Expected Behaviour
+      description: What should happen?
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual-behaviour
+    attributes:
+      label: Actual Behaviour
+      description: What actually happens?
+    validations:
+      required: true
+
+  # ── Environment ─────────────────────────────────────────────────────────────
+  - type: dropdown
+    id: environment
+    attributes:
+      label: Environment Where Bug Was Observed
+      options:
+        - Production
+        - UAT / Staging
+        - Development / Local
+        - CI / Build pipeline
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Application Version / Release Tag
+      placeholder: "e.g. release-20260301120000 or commit SHA"
+
+  - type: textarea
+    id: browser-os
+    attributes:
+      label: Browser / OS / Runtime (if applicable)
+      placeholder: |
+        - OS: Ubuntu 22.04 / Windows 11 / macOS 14
+        - Browser: Chrome 123 / Firefox 124 / N/A
+        - Node.js: 20.x / Python: 3.12 / N/A
+
+  # ── Severity & Impact ───────────────────────────────────────────────────────
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Severity
+      description: How severely does this bug affect users?
+      options:
+        - Critical — system down / data loss / security issue
+        - High — major feature broken, no workaround
+        - Medium — feature degraded, workaround exists
+        - Low — minor cosmetic or edge-case issue
+    validations:
+      required: true
+
+  # ── Supporting Evidence ─────────────────────────────────────────────────────
+  - type: textarea
+    id: logs-screenshots
+    attributes:
+      label: Logs / Screenshots / Recordings
+      description: >
+        Attach error logs, console output, screenshots, or screen recordings
+        that help illustrate the issue.
+
+  # ── Proposed Fix (optional) ─────────────────────────────────────────────────
+  - type: textarea
+    id: proposed-fix
+    attributes:
+      label: Proposed Fix (optional)
+      description: >
+        If you have identified a potential root cause or fix, describe it here.
+
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional Context
+      description: >
+        Any other information (related issues, Azure DevOps work items,
+        workarounds currently in use, etc.).

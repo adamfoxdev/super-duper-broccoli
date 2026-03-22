@@ -10,6 +10,60 @@ This document outlines the end-to-end development workflow, covering each stage 
 Intake → Azure DevOps → GitHub Copilot → UAT → Production
 ```
 
+### Automation Architecture
+
+The table below shows where automation takes over and where a human approval gate is required.
+
+| Stage | Automation | Human Quality Gate |
+|---|---|---|
+| Intake | GitHub Issue templates enforce structured request data | Product owner / stakeholder must triage and approve before work begins |
+| Planning | Azure DevOps Boards tracks work; items are linked to PRs | Sprint planning sign-off by product owner |
+| Development | CI workflow runs lint, build, and tests on every PR | **Code review:** at least one CODEOWNER approval required before merge (branch protection) |
+| UAT Deployment | `deploy-uat.yml` triggers automatically after merge to `main` | **Environment approval:** a designated reviewer must approve the `uat` GitHub Environment before deployment proceeds |
+| UAT Testing | Automated smoke tests run against the UAT environment after deployment | **UAT sign-off:** product owner or designated tester formally approves the release candidate |
+| Production Deployment | `deploy-production.yml` is triggered (manually or automatically); reruns the full test suite before deploying | **Environment approval:** a designated reviewer must approve the `production` GitHub Environment; creates a GitHub Release automatically |
+| Post-release | Post-deployment smoke tests and stakeholder notification run automatically | On-call engineer monitors dashboards; manual rollback step available |
+
+### Files Added
+
+```
+.github/
+├── CODEOWNERS                          # Enforces required code reviewers
+├── PULL_REQUEST_TEMPLATE.md            # Consistent PR quality checklist
+├── ISSUE_TEMPLATE/
+│   ├── feature_request.yml             # Structured intake for new features
+│   └── bug_report.yml                  # Structured intake for defects
+└── workflows/
+    ├── ci.yml                          # Lint → Build → Test on every PR
+    ├── deploy-uat.yml                  # Deploy to UAT after merge to main
+    └── deploy-production.yml           # Deploy to production (manual sign-off)
+```
+
+### Required One-Time GitHub Setup
+
+The following settings must be configured once by a repository administrator for the automation to enforce human gates:
+
+1. **Branch protection on `main`**
+   - Require a pull request before merging
+   - Require approvals: 1 (or more)
+   - Require review from Code Owners
+   - Require status checks to pass: `lint`, `build`, `test`
+
+2. **`uat` GitHub Environment**  _(Settings → Environments → New environment)_
+   - Required reviewers: add the UAT approver(s)
+   - (Optional) Deployment branches: `main` only
+   - Add environment variable: `UAT_URL`
+   - Add environment secret: `UAT_DEPLOY_TOKEN`
+
+3. **`production` GitHub Environment**  _(Settings → Environments → New environment)_
+   - Required reviewers: add the production approver(s)
+   - (Optional) Wait timer: e.g. 30 minutes after UAT sign-off
+   - Deployment branches: `main` only
+   - Add environment variable: `PRODUCTION_URL`
+   - Add environment secret: `PROD_DEPLOY_TOKEN`
+
+---
+
 ---
 
 ## Stage 1: Intake
