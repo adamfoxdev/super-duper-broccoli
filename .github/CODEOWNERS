@@ -1,0 +1,19 @@
+# CODEOWNERS
+#
+# Each line is a file-pattern followed by one or more GitHub usernames or
+# team slugs that own matching files.  Owners are automatically added as
+# reviewers when a PR touches their files and branch-protection rules enforce
+# at least one CODEOWNER approval before merging.
+#
+# Syntax reference:
+#   https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
+# ── Default owner (all files not matched by a more specific rule) ─────────────
+*                                   @adamfoxdev
+
+# ── GitHub Actions / CI-CD workflows ─────────────────────────────────────────
+.github/                            @adamfoxdev
+
+# ── Workflow and process documentation ───────────────────────────────────────
+WORKFLOW.md                         @adamfoxdev
+README.md                           @adamfoxdev

@@ -1,0 +1,105 @@
+# Continuous Integration
+#
+# Triggered on every pull request targeting the main branch.
+# All steps must pass before a PR can be merged.
+#
+# Human quality gate: at least one approved code review is required
+# (enforced via branch-protection rules on the main branch).
+
+name: CI
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  # ─── Lint ────────────────────────────────────────────────────────────────────
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+        # Remove or replace this step if the project does not use Node.js.
+
+      - name: Install dependencies
+        run: npm ci
+        # Replace with the appropriate package-manager command for this project.
+
+      - name: Run linter
+        run: npm run lint
+        # Replace with the appropriate lint command (e.g. `flake8`, `golangci-lint run`).
+
+  # ─── Build ───────────────────────────────────────────────────────────────────
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    needs: lint
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+        # Replace with the appropriate build command for this project.
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-artifact
+          path: dist/
+          # Update `path` to wherever the build output is written.
+          retention-days: 7
+
+  # ─── Unit & Integration Tests ────────────────────────────────────────────────
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests
+        run: npm test
+        # Replace with the appropriate test command (e.g. `pytest`, `go test ./...`).
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: test-results/
+          # Update `path` to wherever test result files (JUnit XML, coverage, etc.) are written.
+          retention-days: 7

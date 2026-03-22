@@ -1,0 +1,124 @@
+# Deploy to UAT
+#
+# Triggered automatically when a PR is merged into main.
+# The `uat` GitHub Environment is configured with required reviewers,
+# so a human must approve the deployment before it proceeds.
+#
+# Human quality gate: Environment approval in the `uat` GitHub Environment.
+#   Configure reviewers at:
+#   Settings → Environments → uat → Required reviewers
+
+name: Deploy to UAT
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+  deployments: write
+
+jobs:
+  # ─── Download the artifact built by CI ───────────────────────────────────────
+  prepare:
+    name: Prepare artifact
+    runs-on: ubuntu-latest
+    outputs:
+      artifact-name: ${{ steps.set-name.outputs.name }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Set artifact name
+        id: set-name
+        run: echo "name=uat-build-${{ github.sha }}" >> "$GITHUB_OUTPUT"
+
+      - name: Upload UAT artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: uat-build-${{ github.sha }}
+          path: dist/
+          retention-days: 14
+
+  # ─── Deploy (waits for human approval via Environment protection) ─────────────
+  deploy:
+    name: Deploy to UAT
+    needs: prepare
+    runs-on: ubuntu-latest
+    environment:
+      name: uat
+      url: ${{ vars.UAT_URL }}
+      # UAT_URL should be set as an Environment variable in the `uat` Environment.
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ needs.prepare.outputs.artifact-name }}
+          path: dist/
+
+      - name: Deploy to UAT environment
+        run: |
+          echo "Deploying commit ${{ github.sha }} to UAT..."
+          # Replace the line below with the real deployment command, e.g.:
+          #   az webapp deploy --name my-app-uat ...
+          #   kubectl apply -f k8s/uat/ ...
+          #   ./scripts/deploy.sh uat dist/
+          echo "Deployment step — replace this with your actual deploy command."
+        env:
+          # Secrets should be stored in the `uat` GitHub Environment.
+          DEPLOY_TOKEN: ${{ secrets.UAT_DEPLOY_TOKEN }}
+
+  # ─── Smoke Tests ─────────────────────────────────────────────────────────────
+  smoke-test:
+    name: UAT Smoke Tests
+    needs: deploy
+    runs-on: ubuntu-latest
+    environment:
+      name: uat
+      url: ${{ vars.UAT_URL }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run smoke tests against UAT
+        run: |
+          echo "Running smoke tests against ${{ vars.UAT_URL }}..."
+          # Replace with the real smoke-test command, e.g.:
+          #   npm run test:smoke -- --base-url "$UAT_URL"
+          #   pytest tests/smoke/ --base-url "$UAT_URL"
+          echo "Smoke test step — replace this with your actual smoke-test command."
+        env:
+          UAT_URL: ${{ vars.UAT_URL }}
+
+  # ─── Notify stakeholders ─────────────────────────────────────────────────────
+  notify:
+    name: Notify stakeholders
+    needs: smoke-test
+    runs-on: ubuntu-latest
+    if: success()
+    steps:
+      - name: Post UAT-ready notification
+        run: |
+          echo "UAT deployment of ${{ github.sha }} succeeded."
+          echo "UAT URL: ${{ vars.UAT_URL }}"
+          # Integrate your notification mechanism here, e.g.:
+          #   - Post a message to a Teams/Slack channel
+          #   - Send an email via SendGrid / SES
+          #   - Update the linked Azure DevOps work item
+          echo "Notification step — wire up your alerting tool here."
